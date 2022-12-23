@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "stockviewer"
+version = "0.1.0"
+description = ""
+authors = ["shift4869 <fantasy_world4423-git@yahoo.co.jp>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pycodestyle = "^2.9.1"
+flask = "^2.2.2"
+uwsgi = "^2.0.21"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
