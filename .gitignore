@@ -107,7 +107,6 @@ ENV/
 !config_example.ini
 !logging.ini
 !encrypt*.ini
-*.html
 *.db
 log*.txt*
 *.stackdump

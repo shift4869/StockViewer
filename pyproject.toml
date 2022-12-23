@@ -10,6 +10,7 @@ python = "^3.10"
 pycodestyle = "^2.9.1"
 flask = "^2.2.2"
 uwsgi = "^2.0.21"
+sqlalchemy = "^1.4.45"
 
 [build-system]
 requires = ["poetry-core"]
