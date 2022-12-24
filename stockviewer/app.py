@@ -1,10 +1,14 @@
 from flask import Flask, render_template
 
+import stockviewer.db as db
+
+
 app = Flask(__name__)
 
 
 @app.route("/")
 def index():
+    db.sample_db_controll()
     return render_template("index.html")
 
 
