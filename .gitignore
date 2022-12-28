@@ -120,3 +120,4 @@ log*.txt*
 *.xcf
 *.pdf
 *.bat
+sample/
