@@ -1,1 +1,44 @@
-<h2>Hello Flask+uWSGI+Nginx 6</h2>
+<h2>ポートフォリオ</h2>
+
+<table>
+    <tbody>
+        <tr>
+            <td>株式</td>
+            <td>海外株か</td>
+            <td>銘柄コード</td>
+            <td>銘柄名</td>
+            <td>買付日</td>
+            <td>数量</td>
+            <td>取得単価</td>
+            <td>取得単価（円）</td>
+            <td>現在値</td>
+            <td>現在値（円）</td>
+            <td>損益</td>
+            <td>損益（円）</td>
+            <td>損益（％）</td>
+            <td>評価額</td>
+            <td>評価額（円）</td>
+            <td>情報取得日時</td>
+        </tr>
+        {% for row in table %}
+        <tr>
+            <td>{{ row.stock_type }}</td>
+            <td>{{ row.is_foreign }}</td>
+            <td>{{ row.code }}</td>
+            <td>{{ row.name }}</td>
+            <td>{{ row.purchased_at }}</td>
+            <td>{{ row.amount }}</td>
+            <td>{{ row.unit_value }}</td>
+            <td>{{ row.unit_value_jpn }}</td>
+            <td>{{ row.current_value }}</td>
+            <td>{{ row.current_value_jpn }}</td>
+            <td>{{ row.profit_loss_value }}</td>
+            <td>{{ row.profit_loss_value_jpn }}</td>
+            <td>{{ row.profit_loss_ratio }}</td>
+            <td>{{ row.eval_value }}</td>
+            <td>{{ row.eval_value_jpn }}</td>
+            <td>{{ row.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

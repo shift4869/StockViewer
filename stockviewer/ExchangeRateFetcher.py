@@ -1,27 +1,23 @@
-import configparser
-import os
-from pathlib import Path
-import sys
+from bs4 import BeautifulSoup
 from logging import INFO, getLogger
+from pathlib import Path
 from pyppeteer import launch
+from requests_html import AsyncHTMLSession
 from requests_html import HTML
 import asyncio
-import random
+import configparser
 import logging.config
-from requests_html import AsyncHTMLSession
-from bs4 import BeautifulSoup
+import os
+import random
+import re
+import sys
 
-# logging.config.fileConfig("./log/logging.ini", disable_existing_loggers=False)
-# for name in logging.root.manager.loggerDict:
-#     # 自分以外のすべてのライブラリのログ出力を抑制
-#     if "stockviewer" not in name:
-#         getLogger(name).disabled = True
 logger = getLogger(__name__)
 logger.setLevel(INFO)
 
 
-class StockFetcher():
-    CONFIG_FILE_NAME = "./config/config.ini"
+class ExchangeRateFetcher():
+    CONFIG_FILE_NAME = "../config/config.ini"
 
     def __init__(self):
         self.config = configparser.ConfigParser()
@@ -38,7 +34,7 @@ class StockFetcher():
             exit(-1)
 
     async def fetch(self):
-        """SBI証券のポートフォリオページを取得する
+        """SBI証券の口座管理->口座(外貨建)ページにある米ドル/円を取得する
         """
         session = AsyncHTMLSession()
         browser = await launch(
@@ -49,7 +45,7 @@ class StockFetcher():
         session._browser = browser
         page = await browser.newPage()
 
-        # 対象ページに移動
+        # トップページに移動
         url = "https://www.sbisec.co.jp/ETGate"
 
         # ページ遷移して読み込みが終わるまで待つ
@@ -77,8 +73,12 @@ class StockFetcher():
         await page.waitForNavigation()
         content = await page.content()
 
-        # ポートフォリオの画面に遷移
-        selector = 'img[title="ポートフォリオ"]'
+        # 口座管理のページに遷移
+        selector = 'img[title="口座管理"]'
+        await asyncio.gather(page.click(selector), page.waitForNavigation())
+
+        # 口座(外貨建)のページに遷移
+        selector = 'a[href="/ETGate/?_ControlID=WPLETsmR001Control&_DataStoreID=DSWPLETsmR001Control&_PageID=WPLETsmR001Sdtl12&sw_page=BondFx&sw_param2=02_201&cat1=home&cat2=none&getFlg=on"]'
         await asyncio.gather(page.click(selector), page.waitForNavigation())
 
         content = await page.content()
@@ -89,24 +89,33 @@ class StockFetcher():
 
         return content
 
-    def make_table_data(self, html_page_content):
+    def parse_html(self, html_page_content) -> dict:
         soup = BeautifulSoup(html_page_content, "html.parser")
-        tables = soup.findAll("table", attrs={"bgcolor": "#9fbf99", "border": "0", "cellspacing": "1", "cellpadding": "4", "width": "100%"})
-        for table in tables:
-            trs = table.findAll("tbody")[0].findAll("tr")
-            for tr in trs:
-                # tds = tr.findAll("td", class_="mtext", attrs={"align": "left"})
-                tds = tr.findAll("td")
-                for td in tds:
-                    print(td.text)
-        pass
+        trs = soup.findAll("tr", attrs={"class": "mtext", "valign": "top"})
+        for tr in trs:
+            tds = tr.findAll("td")
+            row = [td.text for td in tds]
+            if row[0] == "米ドル/円":
+                rate = row[1]
+                date = row[2][1:-1]  # 両端はカッコなので省く
+                return {
+                    "target": "USD",
+                    "base": "JPN",
+                    "rate": rate,
+                    "date": date,
+                }
+        return {}
+
+    def get_rate(self) -> dict:
+        content = None
+        loop = asyncio.get_event_loop()
+        content = loop.run_until_complete(self.fetch())
+        # with Path("./sample/exchange_rate.html").open("r") as fin:
+        #     content = fin.read()
+        result = self.parse_html(content)
+        return result
 
 
 if __name__ == "__main__":
-    sf = StockFetcher()
-    content = None
-    # loop = asyncio.get_event_loop()
-    # content = loop.run_until_complete(sf.fetch())
-    with Path("./stockviewer/sample/content.html").open("r") as fin:
-        content = fin.read()
-    table_data = sf.make_table_data(content)
+    sf = ExchangeRateFetcher()
+    print(sf.get_rate())
